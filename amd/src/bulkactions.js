@@ -164,17 +164,21 @@ export const init = () => {
     ]);
     prefetchStrings('core', ['yes', 'no']);
 
+    const actionsList = document.querySelector(SELECTORS.TOUR_ACTIONS_LIST);
+    if (actionsList) {
+        addBulkImportLink(actionsList);
+    }
+
+    // With zero tours, core's flexible_table prints a "Nothing to display"
+    // notice instead of a <table> element at all - nothing to add checkboxes
+    // or a selection toolbar to in that case, but the import link above still
+    // applies regardless.
     const table = document.querySelector(SELECTORS.TABLE);
     if (!table) {
         return;
     }
 
     addCheckboxColumn(table);
-
-    const actionsList = document.querySelector(SELECTORS.TOUR_ACTIONS_LIST);
-    if (actionsList) {
-        addBulkImportLink(actionsList);
-    }
 
     buildToolbar(table).then(toolbar => {
         const getSelectedIds = () => Array.from(
