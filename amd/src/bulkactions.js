@@ -1,6 +1,6 @@
 /**
- * Bulk import/export/delete controls injected onto the tool_usertours
- * configure.php tour list page.
+ * Bulk import/export/delete/enable/disable/edit-filters controls injected
+ * onto the tool_usertours configure.php tour list page.
  *
  * @module     local_bulktourmanager/bulkactions
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
@@ -9,6 +9,8 @@
 import {prefetchStrings} from 'core/prefetch';
 import {getString} from 'core/str';
 import {confirm as confirmModal} from 'core/notification';
+import {add as addToast} from 'core/toast';
+import ModalForm from 'core_form/modalform';
 
 const SELECTORS = {
     // tool_usertours\local\table\tour_list renders no id on the <table>, only
@@ -65,12 +67,14 @@ const addCheckboxColumn = table => {
 };
 
 /**
- * Build and submit a hidden POST form carrying the selected tour ids.
+ * Build and submit a hidden POST form carrying the selected tour ids plus
+ * any extra fields.
  *
  * @param {String} action The URL to submit to.
  * @param {String[]} ids The selected tour ids.
+ * @param {Object} extraFields Extra name->value fields to include.
  */
-const submitBulkForm = (action, ids) => {
+const submitBulkForm = (action, ids, extraFields = {}) => {
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = action;
@@ -86,6 +90,7 @@ const submitBulkForm = (action, ids) => {
 
     addHidden('sesskey', M.cfg.sesskey);
     ids.forEach(id => addHidden('ids[]', id));
+    Object.entries(extraFields).forEach(([name, value]) => addHidden(name, value));
 
     document.body.appendChild(form);
     form.submit();
@@ -114,40 +119,69 @@ const addBulkImportLink = actionsList => {
 };
 
 /**
- * Build the selection toolbar (Export selected / Delete selected), disabled
- * until at least one row checkbox is checked.
+ * Build the selection toolbar (Export/Delete/Enable/Disable selected, Edit
+ * filters), disabled until at least one row checkbox is checked.
  *
  * @param {HTMLTableElement} table
  * @return {Promise<HTMLElement>}
  */
 const buildToolbar = table => {
-    return Promise.all([
-        getString('exportselected', 'local_bulktourmanager'),
-        getString('deleteselected', 'local_bulktourmanager'),
-    ]).then(([exportLabel, deleteLabel]) => {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'local-bulktourmanager-toolbar mb-3';
+    const buttonSpecs = [
+        ['export', 'exportselected', 'btn btn-secondary mr-2'],
+        ['enable', 'enableselected', 'btn btn-secondary mr-2'],
+        ['disable', 'disableselected', 'btn btn-secondary mr-2'],
+        ['editfilters', 'editfilters', 'btn btn-secondary mr-2'],
+        ['delete', 'deleteselected', 'btn btn-outline-danger'],
+    ];
 
-        const exportButton = document.createElement('button');
-        exportButton.type = 'button';
-        exportButton.className = 'btn btn-secondary mr-2';
-        exportButton.textContent = exportLabel;
-        exportButton.disabled = true;
-        exportButton.dataset.bulktourmanagerAction = 'export';
+    return Promise.all(buttonSpecs.map(([, stringkey]) => getString(stringkey, 'local_bulktourmanager')))
+        .then(labels => {
+            const toolbar = document.createElement('div');
+            toolbar.className = 'local-bulktourmanager-toolbar mb-3';
 
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.className = 'btn btn-outline-danger';
-        deleteButton.textContent = deleteLabel;
-        deleteButton.disabled = true;
-        deleteButton.dataset.bulktourmanagerAction = 'delete';
+            buttonSpecs.forEach(([action, , className], index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = className;
+                button.textContent = labels[index];
+                button.disabled = true;
+                button.dataset.bulktourmanagerAction = action;
+                toolbar.appendChild(button);
+            });
 
-        toolbar.appendChild(exportButton);
-        toolbar.appendChild(deleteButton);
+            table.parentNode.insertBefore(toolbar, table);
 
-        table.parentNode.insertBefore(toolbar, table);
+            return toolbar;
+        });
+};
 
-        return toolbar;
+/**
+ * Open the bulk-edit-filters modal for the given tour ids.
+ *
+ * @param {String[]} ids
+ */
+const openEditFiltersModal = ids => {
+    getString('editfilterstitle', 'local_bulktourmanager', ids.length).then(title => {
+        const form = new ModalForm({
+            formClass: 'local_bulktourmanager\\form\\bulk_filters_form',
+            args: {ids: ids.join(',')},
+            modalConfig: {title},
+        });
+
+        form.addEventListener(form.events.FORM_SUBMITTED, event => {
+            const updated = event.detail && event.detail.updated ? event.detail.updated : 0;
+            getString('bulkeditfiltersresult', 'local_bulktourmanager', updated).then(message => {
+                return addToast(message);
+            }).catch(() => {
+                // Nothing more we can do if even the fallback string fetch fails.
+            });
+        });
+
+        form.show();
+
+        return form;
+    }).catch(() => {
+        // If string prefetch failed the modal was never opened; nothing to clean up.
     });
 };
 
@@ -158,9 +192,14 @@ export const init = () => {
     prefetchStrings('local_bulktourmanager', [
         'bulkimport',
         'exportselected',
+        'enableselected',
+        'disableselected',
+        'editfilters',
         'deleteselected',
         'confirmbulkdeletetitle',
         'confirmbulkdeletequestion',
+        'editfilterstitle',
+        'bulkeditfiltersresult',
     ]);
     prefetchStrings('core', ['yes', 'no']);
 
@@ -215,6 +254,12 @@ export const init = () => {
             const action = button.dataset.bulktourmanagerAction;
             if (action === 'export') {
                 submitBulkForm(M.cfg.wwwroot + '/local/bulktourmanager/export.php', ids);
+            } else if (action === 'enable') {
+                submitBulkForm(M.cfg.wwwroot + '/local/bulktourmanager/toggle.php', ids, {enabled: '1'});
+            } else if (action === 'disable') {
+                submitBulkForm(M.cfg.wwwroot + '/local/bulktourmanager/toggle.php', ids, {enabled: '0'});
+            } else if (action === 'editfilters') {
+                openEditFiltersModal(ids);
             } else if (action === 'delete') {
                 confirmModal(
                     getString('confirmbulkdeletetitle', 'local_bulktourmanager'),
