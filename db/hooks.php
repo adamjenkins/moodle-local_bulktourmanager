@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Site-wide admin settings for local_bulktourmanager.
+ * Hook callbacks for local_bulktourmanager.
  *
  * @package    local_bulktourmanager
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
@@ -24,11 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
-    $ADMIN->add('appearance', new admin_externalpage(
-        'local_bulktourmanager',
-        get_string('pluginname', 'local_bulktourmanager'),
-        new moodle_url('/local/bulktourmanager/index.php'),
-        'local/bulktourmanager:manage'
-    ));
-}
+$callbacks = [
+    [
+        'hook' => \core\hook\output\before_footer_html_generation::class,
+        'callback' => \local_bulktourmanager\hook_callbacks::class . '::before_footer_html_generation',
+        'priority' => 0,
+    ],
+];

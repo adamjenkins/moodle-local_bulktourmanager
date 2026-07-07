@@ -14,22 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_bulktourmanager\form;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/formslib.php');
+
 /**
- * Capability definitions for local_bulktourmanager.
+ * Form for bulk-importing a zip of tour export JSON files.
  *
  * @package    local_bulktourmanager
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class import_form extends \moodleform {
+    /**
+     * Form definition.
+     */
+    public function definition() {
+        $mform = $this->_form;
 
-defined('MOODLE_INTERNAL') || die();
+        $mform->addElement('filepicker', 'tourzip', get_string('tourzip', 'local_bulktourmanager'), null, [
+            'accepted_types' => ['.zip'],
+        ]);
+        $mform->addRule('tourzip', null, 'required');
 
-$capabilities = [
-    'local/bulktourmanager:manage' => [
-        'captype'      => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes'   => [
-            'manager' => CAP_ALLOW,
-        ],
-    ],
-];
+        $this->add_action_buttons();
+    }
+}

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin landing page for local_bulktourmanager.
+ * Bulk-delete the selected tool_usertours tours.
  *
  * @package    local_bulktourmanager
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
@@ -26,15 +26,27 @@ require(__DIR__ . '/../../config.php');
 
 require_login();
 $context = context_system::instance();
-require_capability('local/bulktourmanager:manage', $context);
+require_capability('tool/usertours:managetours', $context);
+require_sesskey();
 
-$PAGE->set_url('/local/bulktourmanager/index.php');
-$PAGE->set_context($context);
-$PAGE->set_pagelayout('admin');
-$PAGE->set_title(get_string('pluginname', 'local_bulktourmanager'));
-$PAGE->set_heading(get_string('pluginname', 'local_bulktourmanager'));
+$listurl = new moodle_url('/admin/tool/usertours/configure.php');
 
-echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('managetours', 'local_bulktourmanager'));
-echo $OUTPUT->notification('Bulk import/export of user tours is not implemented yet.', 'info');
-echo $OUTPUT->footer();
+$ids = required_param_array('ids', PARAM_INT);
+
+$deleted = 0;
+foreach ($ids as $id) {
+    try {
+        $tour = \tool_usertours\tour::instance($id);
+        $tour->remove();
+        $deleted++;
+    } catch (\Throwable $e) {
+        // Already gone (e.g. deleted concurrently by someone else) - nothing to do.
+        continue;
+    }
+}
+
+if ($deleted > 0) {
+    redirect($listurl, get_string('bulkdeleteresult', 'local_bulktourmanager', $deleted), null, \core\notification::SUCCESS);
+} else {
+    redirect($listurl, get_string('bulkdeletenone', 'local_bulktourmanager'), null, \core\notification::WARNING);
+}

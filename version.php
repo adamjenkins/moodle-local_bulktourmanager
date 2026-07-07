@@ -25,7 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_bulktourmanager';
-$plugin->version   = 2026070700; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2026070701; // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2026042000; // Moodle 5.2.
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.1.0';
+$plugin->dependencies = [
+    'tool_usertours' => ANY_VERSION,
+];

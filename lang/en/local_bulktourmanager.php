@@ -24,7 +24,18 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['bulkdeletenone'] = 'No tours were deleted.';
+$string['bulkdeleteresult'] = 'Deleted {$a} tour(s).';
+$string['bulkexportnone'] = 'No tours were selected to export.';
+$string['bulkimport'] = 'Bulk import (zip)';
+$string['bulkimport_explanation'] = 'Upload a zip file containing one or more tour export JSON files (as produced by User tours\' own "Export" action). Every JSON file found in the zip will be imported as a new tour.';
+$string['bulkimportfailures'] = 'Some files in the zip could not be imported: {$a}';
+$string['bulkimportnone'] = 'No tours were imported. The zip did not contain any valid tour export JSON files.';
+$string['bulkimportresult'] = 'Imported {$a->imported} of {$a->total} tours.';
+$string['confirmbulkdeletequestion'] = 'Delete {$a} selected tour(s)? This cannot be undone.';
+$string['confirmbulkdeletetitle'] = 'Delete selected tours';
+$string['deleteselected'] = 'Delete selected';
+$string['exportselected'] = 'Export selected';
 $string['pluginname'] = 'Bulk tour manager';
-$string['bulktourmanager:manage'] = 'Bulk import and manage user tours';
-$string['managetours'] = 'Manage tours';
 $string['privacy:metadata'] = 'The Bulk tour manager plugin does not store any personal data itself; it only manages tour definitions on behalf of Site administration > User tours.';
+$string['tourzip'] = 'Zip file of tour exports';
