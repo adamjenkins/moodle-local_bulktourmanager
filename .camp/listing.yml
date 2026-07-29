@@ -1,0 +1,23 @@
+# camp listing manifest — descriptive content for your plugin's page.
+# Edit freely and commit; camp ingests this file at each tagged release.
+# Schema: https://camp-registry.org/schema/listing.schema.json
+name: local_bulktourmanager
+summary: 'Adds bulk import, export and delete for tool_usertours guided tours directly onto the existing User tours admin page.'
+description: |
+  Adds bulk operations to *Site administration > Appearance > User tours*
+  with no separate admin page: upload a zip of tour-export JSON files to import
+  many tours at once, tick tours in the existing list to export them as a
+  single zip, or delete them in one confirmed operation. Nothing touches
+  Moodle core — the controls are injected via the
+  `before_footer_html_generation` hook.
+labels:
+  # Required disclosure labels — pick all that apply (RFC §4.7):
+  #   fully-free | freemium | paid-service | external-account
+  #   donation-supported | commercial-support-available
+  - fully-free
+# screenshots:
+#   - path: .camp/screenshots/overview.png
+#     caption: Main view
+# links:
+#   docs: https://…
+#   issues: https://…
