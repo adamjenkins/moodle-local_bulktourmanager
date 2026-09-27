@@ -85,15 +85,15 @@ final class importer_test extends advanced_testcase {
     public function test_records_failure_for_invalid_json_without_aborting_others(): void {
         global $DB;
 
-        // The malformed fixture below intentionally triggers PHP warnings inside
-        // tool_usertours's own (not null-guarded) property reads; that's expected.
+        // The importer must reject the malformed file itself, before handing it to
+        // tool_usertours (whose property reads are not null-guarded and would emit
+        // PHP warnings, failing this suite under failOnWarning).
         $this->resetAfterTest();
 
         $dir = make_request_directory();
         file_put_contents($dir . '/valid.json', $this->tour_json('Still imported'));
-        // Valid JSON, but missing the 'steps' array that
-        // manager::import_tour_from_json() requires - a deterministic
-        // TypeError, rather than relying on json_decode() failure semantics.
+        // Valid JSON, but missing the tour properties (including 'steps') that
+        // manager::import_tour_from_json() reads without checking.
         file_put_contents($dir . '/broken.json', json_encode((object) ['name' => 'Missing steps']));
 
         $before = $DB->count_records('tool_usertours_tours');
@@ -103,7 +103,38 @@ final class importer_test extends advanced_testcase {
         $this->assertEquals(1, $result->imported);
         $this->assertCount(1, $result->failures);
         $this->assertStringContainsString('broken.json', $result->failures[0]);
+        $this->assertStringContainsString(
+            get_string('bulkimportinvalidfile', 'local_bulktourmanager', 'pathmatch'),
+            $result->failures[0]
+        );
         $this->assertEquals($before + 1, $DB->count_records('tool_usertours_tours'));
+        $this->assertFalse($DB->record_exists('tool_usertours_tours', ['name' => 'Missing steps']));
+    }
+
+    public function test_validate_tour_json(): void {
+        $valid = json_decode($this->tour_json('Valid'));
+        $this->assertNull(importer::validate_tour_json(json_encode($valid)));
+
+        $this->assertSame('invalid JSON', importer::validate_tour_json('{not json'));
+        $this->assertSame('invalid JSON', importer::validate_tour_json('[]'));
+
+        $nosteps = clone $valid;
+        unset($nosteps->steps);
+        $this->assertSame('steps', importer::validate_tour_json(json_encode($nosteps)));
+
+        $legacycomment = clone $valid;
+        $legacycomment->comment = $legacycomment->description;
+        unset($legacycomment->description);
+        $this->assertNull(importer::validate_tour_json(json_encode($legacycomment)));
+
+        $badconfig = clone $valid;
+        $badconfig->configdata = null;
+        $this->assertSame('configdata', importer::validate_tour_json(json_encode($badconfig)));
+
+        $badstep = clone $valid;
+        $badstep->steps = [clone $valid->steps[0]];
+        unset($badstep->steps[0]->targettype);
+        $this->assertSame('steps[0].targettype', importer::validate_tour_json(json_encode($badstep)));
     }
 
     public function test_empty_directory_imports_nothing(): void {

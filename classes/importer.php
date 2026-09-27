@@ -60,8 +60,18 @@ class importer {
                 continue;
             }
 
+            $json = file_get_contents($realpath);
+            $problem = ($json === false) ? 'unreadable' : self::validate_tour_json($json);
+            if ($problem !== null) {
+                // Rejected before core sees it: import_tour_from_json() does no
+                // validation of its own and emits PHP warnings on a malformed record.
+                $result->failures[] = $file->getFilename() . ': ' .
+                    get_string('bulkimportinvalidfile', 'local_bulktourmanager', $problem);
+                continue;
+            }
+
             try {
-                \tool_usertours\manager::import_tour_from_json(file_get_contents($realpath));
+                \tool_usertours\manager::import_tour_from_json($json);
                 $result->imported++;
             } catch (\Throwable $e) {
                 $result->failures[] = $file->getFilename() . ': ' . $e->getMessage();
@@ -69,5 +79,81 @@ class importer {
         }
 
         return $result;
+    }
+
+    /**
+     * Check that a tour export JSON string has every property, of a usable
+     * type, that \tool_usertours\manager::import_tour_from_json() and the
+     * tour/step reload_from_record() methods it calls read unguarded.
+     *
+     * @param string $json
+     * @return string|null Null if valid, otherwise a short description of the first problem found.
+     */
+    public static function validate_tour_json(string $json): ?string {
+        $tour = json_decode($json);
+        if (!$tour instanceof \stdClass) {
+            return 'invalid JSON';
+        }
+
+        $problem = self::check_properties($tour, [
+            'name' => 'string',
+            'pathmatch' => 'nullable',
+            'enabled' => 'scalar',
+            'configdata' => 'string',
+        ]);
+        if ($problem !== null) {
+            return $problem;
+        }
+        // Core falls back to the legacy 'comment' property when 'description' is absent.
+        if (!property_exists($tour, 'description') && !property_exists($tour, 'comment')) {
+            return 'description';
+        }
+        if (!isset($tour->steps) || !is_array($tour->steps)) {
+            return 'steps';
+        }
+
+        foreach ($tour->steps as $index => $step) {
+            if (!$step instanceof \stdClass) {
+                return 'steps[' . $index . ']';
+            }
+            $problem = self::check_properties($step, [
+                'title' => 'nullable',
+                'content' => 'nullable',
+                'targettype' => 'scalar',
+                'targetvalue' => 'nullable',
+                'sortorder' => 'scalar',
+                'configdata' => 'string',
+            ]);
+            if ($problem !== null) {
+                return 'steps[' . $index . '].' . $problem;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check that each named property exists on the record with the given kind of value.
+     *
+     * @param \stdClass $record
+     * @param array $rules Property name to 'string', 'scalar' or 'nullable' (scalar or null).
+     * @return string|null Null if all present and well-typed, otherwise the offending property name.
+     */
+    private static function check_properties(\stdClass $record, array $rules): ?string {
+        foreach ($rules as $property => $kind) {
+            if (!property_exists($record, $property)) {
+                return $property;
+            }
+            $value = $record->$property;
+            $ok = match ($kind) {
+                'string' => is_string($value),
+                'scalar' => is_scalar($value),
+                'nullable' => $value === null || is_scalar($value),
+            };
+            if (!$ok) {
+                return $property;
+            }
+        }
+        return null;
     }
 }

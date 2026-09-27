@@ -1,4 +1,4 @@
-@tool @local_bulktourmanager @javascript
+@local @local_bulktourmanager @javascript
 Feature: Bulk manage user tours
   In order to manage many user tours efficiently
   As an administrator
@@ -33,6 +33,7 @@ Feature: Bulk manage user tours
     Then the "Export selected" "button" should be enabled
     And the "Delete selected" "button" should be enabled
 
+  @_file_upload
   Scenario: Bulk import a zip of tour export files
     When I click on "Bulk import (zip)" "link"
     And I upload "local/bulktourmanager/tests/fixtures/sample_tours.zip" file to "Zip file of tour exports" filemanager

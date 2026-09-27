@@ -13,8 +13,8 @@ import {add as addToast} from 'core/toast';
 import ModalForm from 'core_form/modalform';
 
 const SELECTORS = {
-    // tool_usertours\local\table\tour_list renders no id on the <table>, only
-    // this class list (see its constructor's set_attribute('class', ...)).
+    // The tool_usertours\local\table\tour_list table renders no id on the <table>,
+    // only this class list (see its constructor's set_attribute('class', ...)).
     TABLE: 'table.admintable.generaltable',
     DELETE_LINK: '[data-action="delete"][data-id]',
     ROW_CHECKBOX: 'input[data-bulktourmanager-checkbox]',
@@ -156,6 +156,20 @@ const buildToolbar = table => {
 };
 
 /**
+ * Report how many tours the bulk-edit-filters form updated.
+ *
+ * @param {CustomEvent} event The modal form's FORM_SUBMITTED event.
+ */
+const onFiltersSubmitted = event => {
+    const updated = event.detail && event.detail.updated ? event.detail.updated : 0;
+    getString('bulkeditfiltersresult', 'local_bulktourmanager', updated).then(message => {
+        return addToast(message);
+    }).catch(() => {
+        // Nothing more we can do if even the fallback string fetch fails.
+    });
+};
+
+/**
  * Open the bulk-edit-filters modal for the given tour ids.
  *
  * @param {String[]} ids
@@ -168,14 +182,7 @@ const openEditFiltersModal = ids => {
             modalConfig: {title},
         });
 
-        form.addEventListener(form.events.FORM_SUBMITTED, event => {
-            const updated = event.detail && event.detail.updated ? event.detail.updated : 0;
-            getString('bulkeditfiltersresult', 'local_bulktourmanager', updated).then(message => {
-                return addToast(message);
-            }).catch(() => {
-                // Nothing more we can do if even the fallback string fetch fails.
-            });
-        });
+        form.addEventListener(form.events.FORM_SUBMITTED, onFiltersSubmitted);
 
         form.show();
 

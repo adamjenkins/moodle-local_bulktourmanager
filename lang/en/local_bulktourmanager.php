@@ -36,6 +36,7 @@ $string['bulkexportnone'] = 'No tours were selected to export.';
 $string['bulkimport'] = 'Bulk import (zip)';
 $string['bulkimport_explanation'] = 'Upload a zip file containing one or more tour export JSON files (as produced by User tours\' own "Export" action). Every JSON file found in the zip will be imported as a new tour.';
 $string['bulkimportfailures'] = 'Some files in the zip could not be imported: {$a}';
+$string['bulkimportinvalidfile'] = 'not a valid tour export file ({$a})';
 $string['bulkimportnone'] = 'No tours were imported. The zip did not contain any valid tour export JSON files.';
 $string['bulkimportresult'] = 'Imported {$a->imported} of {$a->total} tours.';
 $string['confirmbulkdeletequestion'] = 'Delete {$a} selected tour(s)? This cannot be undone.';
