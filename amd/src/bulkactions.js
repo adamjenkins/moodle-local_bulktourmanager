@@ -127,10 +127,10 @@ const addBulkImportLink = actionsList => {
  */
 const buildToolbar = table => {
     const buttonSpecs = [
-        ['export', 'exportselected', 'btn btn-secondary mr-2'],
-        ['enable', 'enableselected', 'btn btn-secondary mr-2'],
-        ['disable', 'disableselected', 'btn btn-secondary mr-2'],
-        ['editfilters', 'editfilters', 'btn btn-secondary mr-2'],
+        ['export', 'exportselected', 'btn btn-secondary me-2'],
+        ['enable', 'enableselected', 'btn btn-secondary me-2'],
+        ['disable', 'disableselected', 'btn btn-secondary me-2'],
+        ['editfilters', 'editfilters', 'btn btn-secondary me-2'],
         ['delete', 'deleteselected', 'btn btn-outline-danger'],
     ];
 
