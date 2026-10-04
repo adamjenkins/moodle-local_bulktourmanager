@@ -3,7 +3,7 @@
     "description": "Adds bulk import/export/delete for tool_usertours guided tours directly onto the existing User tours admin page",
     "type": "moodle-local",
     "require": {
-        "moodle/moodle": ">=5.2 <5.4",
+        "moodle/moodle": "^5.2",
         "moodle/composer-installer": "^1.0"
     },
     "license": "GPL-3.0-or-later"
