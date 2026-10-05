@@ -15,9 +15,19 @@ labels:
   #   fully-free | freemium | paid-service | external-account
   #   donation-supported | commercial-support-available
   - fully-free
-# screenshots:
-#   - path: .camp/screenshots/overview.png
-#     caption: Main view
+screenshots:
+  - path: .camp/screenshots/01-select-tours.png
+    caption: The User tours list with the added checkboxes and bulk action buttons. Select all is ticked, so the buttons are active.
+  - path: .camp/screenshots/02-bulk-import.png
+    caption: 'Bulk import: a zip of six tour export files for an "Introduction to Biology" course, ready to import.'
+  - path: .camp/screenshots/03-import-result.png
+    caption: 'After the import: "Imported 6 of 6 tours." The new tours are added to the list.'
+  - path: .camp/screenshots/04-edit-filters.png
+    caption: 'Edit filters for 4 selected tours: tick "Change this filter" next to Role and choose the roles to apply to all four.'
+  - path: .camp/screenshots/05-enabled-tours.png
+    caption: 'The Biology 101 tours after "Enable selected" on four of them: four enabled, two still disabled.'
+  - path: .camp/screenshots/06-delete-confirm.png
+    caption: Delete selected asks for confirmation and says how many tours will be deleted.
 # links:
 #   docs: https://…
 #   issues: https://…
